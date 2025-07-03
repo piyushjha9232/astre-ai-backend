@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const completion = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -19,20 +19,30 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
         messages: [
-          { role: "system", content: "You are ASTRE AI, a wise and spiritual assistant for the Devshhilam brand." },
-          { role: "user", content: message },
+          {
+            role: "system",
+            content: "You are ASTRE AI, a spiritual guide representing Devshhilam. Answer wisely and compassionately.",
+          },
+          {
+            role: "user",
+            content: message,
+          },
         ],
       }),
     });
 
-    const data = await completion.json();
+    const data = await response.json();
 
-    const reply = data.choices?.[0]?.message?.content || "Sorry, no reply from ASTRE AI.";
+    if (data.error) {
+      console.error("OpenAI error:", data.error);
+      return res.status(500).json({ error: data.error.message || "OpenAI API error" });
+    }
 
+    const reply = data.choices?.[0]?.message?.content || "No reply from ASTRE AI.";
     return res.status(200).json({ reply });
 
-  } catch (err) {
-    console.error("ASTRE AI Error:", err);
+  } catch (error) {
+    console.error("Server error:", error);
     return res.status(500).json({ error: "ASTRE AI encountered an issue. Please try again." });
   }
 }
